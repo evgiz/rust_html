@@ -254,5 +254,5 @@ cargo test -p rust_html_tests
 Run doc tests:
 
 ```bash
-cargo test -p rust_html_macro
+cargo test -p rust_html_macros
 ```
