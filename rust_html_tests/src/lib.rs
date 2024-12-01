@@ -45,7 +45,7 @@ mod test {
     #[test]
     pub fn test_int_reference_variable() {
         let value1 = 10;
-        test_eq(rhtml! {"{&value1}"}, "10");
+        test_eq(rhtml! {"{value1}"}, "10");
         let value2 = &20;
         test_eq(rhtml! {"{value2}"}, "20");
     }
@@ -203,6 +203,11 @@ mod test {
     }
 
     #[test]
+    pub fn test_conditional_str() {
+        test_eq(rhtml! {r#"{ if true { "hello" } else {"world"}}"#}, "hello");
+    }
+
+    #[test]
     pub fn test_escape_html() {
         let sketchy_user_input = "<script>alert('hi')</script>";
         test_eq(
@@ -267,6 +272,43 @@ mod test {
         }
         "#,
         );
+    }
+
+    #[test]
+    pub fn test_impl_render_input() {
+        let page = rhtml! {r#"{component_dummy("hello, world")}"#};
+        test_eq(page, "<div>hello, world</div>");
+    }
+
+    #[test]
+    pub fn test_nested_impl_render_input() {
+        let text = "hello, world";
+        let inner = rhtml! {r#"<span>{text}</span>"#};
+        let page = rhtml! {r#"{component_dummy(inner)}"#};
+        test_eq(page, "<div><span>hello, world</span></div>");
+    }
+
+    fn component_dummy(children: impl Render + Clone) -> Template {
+        rhtml! {"<div>{children}</div>"}
+    }
+
+    struct ComponentTest {
+        content: Template,
+    }
+
+    impl Render for ComponentTest {
+        fn render(&self) -> Template {
+            rhtml! {"<div>{self.content}</div>"}
+        }
+    }
+
+    #[test]
+    pub fn test_struct_component() {
+        let component = ComponentTest {
+            content: rhtml! {"hello, world"},
+        };
+        let page = rhtml! {"<div>{component}</div>"};
+        test_eq(page, "<div><div>hello, world</div></div>");
     }
 
     fn test_eq(template: Template, expected: &str) {

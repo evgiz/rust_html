@@ -9,7 +9,7 @@ pub use rust_html_macros::rhtml;
 ///
 /// ```rust
 /// use rust_html::{rhtml, Template};
-/// let my_template: Template = rhtml! { "<div>Hello!<div> "};
+/// let my_template: Template = rhtml! { "<div>Hello!</div> "};
 /// ```
 ///
 /// You can convert a template to a HTML string:
@@ -83,7 +83,7 @@ impl Template {
     ///
     /// This implementation is very low level, and requires use of the
     /// internal rust_html templating syntax.
-    pub fn build_internal(template: impl Display, parameters: Vec<Box<dyn Render>>) -> Self {
+    pub fn build_internal(template: impl Display, parameters: Vec<Template>) -> Self {
         Template {
             content: TemplateContent::WithParameters {
                 template: template.to_string(),

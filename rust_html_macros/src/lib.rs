@@ -126,10 +126,10 @@ fn expand(input: TokenStream) -> TokenStream {
     quote! {
         {
             use rust_html::{Render, Template};
-            let mut #param_vec_ident: Vec<Box<dyn rust_html::Render>> = vec![];
+            let mut #param_vec_ident: Vec<Template> = vec![];
             #(
-                let #param_val_ident = {#rust_evaluators.clone()}.to_owned();
-                #param_vec_ident.push(Box::new(#param_val_ident));
+                let #param_val_ident = #rust_evaluators.render();
+                #param_vec_ident.push(#param_val_ident);
             )*
             rust_html::Template::build_internal(
                 #html_literal,
