@@ -393,7 +393,7 @@ dependencies = [
 
 [[package]]
 name = "rust_html"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "html-escape",
  "rust_html_macros",
@@ -401,7 +401,7 @@ dependencies = [
 
 [[package]]
 name = "rust_html_macros"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "litrs",
  "proc-macro2",
@@ -413,7 +413,7 @@ dependencies = [
 
 [[package]]
 name = "rust_html_tests"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "litrs",
  "proc-macro2",
