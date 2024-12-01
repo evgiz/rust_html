@@ -1,0 +1,33 @@
+[package]
+name = "rust_html"
+edition = "2021"
+version = "1.0.0"
+authors = ["Sigve Røkenes <me@evgiz.net>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/evgiz/rust_html"
+repository = "https://github.com/evgiz/rust_html"
+description = "Minimal compile-safe HTML templating library"
+categories = ["template-engine"]
+keywords = [
+    "html",
+    "templating",
+    "template",
+    "components",
+    "rhtml",
+]
+
+
+[lib]
+name = "rust_html"
+
+[dependencies]
+html-escape = "0.2.13"
+rust_html_macros = { path = "./rust_html_macros", version = "1.0.0" }
+
+[workspace]
+members = [
+  "rust_html_macros",
+  "rust_html_tests"
+]
+

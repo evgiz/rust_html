@@ -1,0 +1,16 @@
+[package]
+name = "rust_html_tests"
+edition = "2021"
+version = "0.1.0"
+
+[dependencies]
+syn = {version="2.0", features=["full"]}
+quote = "1.0"
+proc-macro2 = "1.0.92"
+litrs = "0.4.1"
+scraper = "0.21.0"
+rust_html = { path = ".." }
+
+
+
+
