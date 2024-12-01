@@ -2,11 +2,6 @@
 
 The minimal rust html template library
 
-- Use any rust-code inside your template
-- Compile-time HTML syntax validation
-- Reusable components/partials
-- HTML injection safety
-
 ## About
 
 **rust_html** is a tiny templating library that let's you easily create
@@ -38,7 +33,7 @@ println!("{}", html_string);
 
 ```
 
-Why use `rhtml` when you could just use `format!`?
+### Why use **rust_html**?
 
 - Valid HTML syntax is enforced at compile-time
 - Runtime rust values are automatically escaped to protect against injection attacks
@@ -242,6 +237,15 @@ println!("{}", String::from(page));
   </script>
 </div>
 ```
+
+## Related projects
+
+- [maud](https://github.com/lambda-fairy/maud): rust syntax for HTML
+- [askama](https://github.com/djc/askama): jinja like templating library
+- [tera](https://github.com/Keats/tera): jinja2 like templating library
+- [handlebars-rust](https://github.com/sunng87/handlebars-rust): handlebars templating language for rust
+
+Look at the [AWWY](https://www.arewewebyet.org/topics/templating/) website for more examples. 
 
 ## Contributing
 
