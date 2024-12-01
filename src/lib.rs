@@ -2,6 +2,8 @@ use std::fmt::Display;
 
 pub use rust_html_macros::rhtml;
 
+pub mod integration;
+
 /// Struct representing a rust_html template.
 /// Enables easy reusability and injection safety.
 ///

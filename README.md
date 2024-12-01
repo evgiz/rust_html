@@ -238,6 +238,13 @@ println!("{}", String::from(page));
 </div>
 ```
 
+## Integration with web frameworks
+
+Integrating with any web framework is trivial - simply convert the
+template string to the response type for the given framework.
+If you're using Axum you can add the `axum` feature to get support
+for their `IntoResponse` trait.
+
 ## Related projects
 
 - [maud](https://github.com/lambda-fairy/maud): rust syntax for HTML
@@ -245,7 +252,7 @@ println!("{}", String::from(page));
 - [tera](https://github.com/Keats/tera): jinja2 like templating library
 - [handlebars-rust](https://github.com/sunng87/handlebars-rust): handlebars templating language for rust
 
-Look at the [AWWY](https://www.arewewebyet.org/topics/templating/) website for more examples. 
+Look at the [AWWY](https://www.arewewebyet.org/topics/templating/) website for more examples.
 
 ## Contributing
 

@@ -1,7 +1,7 @@
 [package]
 name = "rust_html"
 edition = "2021"
-version = "1.1.0"
+version = "1.1.1"
 authors = ["Sigve Røkenes <me@evgiz.net>"]
 license = "MIT"
 readme = "README.md"
@@ -17,6 +17,9 @@ keywords = [
     "rhtml",
 ]
 
+[features]
+default = []
+axum = ["axum-core", "http"]
 
 [lib]
 name = "rust_html"
@@ -24,6 +27,8 @@ name = "rust_html"
 [dependencies]
 html-escape = "0.2.13"
 rust_html_macros = { path = "./rust_html_macros", version = "1.1.0" }
+axum-core = { version = "0.4", optional = true }
+http = { version = "1", optional = true }
 
 [workspace]
 members = [
