@@ -311,6 +311,18 @@ mod test {
         test_eq(page, "<div><div>hello, world</div></div>");
     }
 
+    #[test]
+    pub fn test_html_root() {
+        // Just a compile ok check
+        rhtml! {r#"
+            <!DOCTYPE html>
+            <html>
+                <head></head>
+                <body></body>
+            </html>
+        "#};
+    }
+
     fn test_eq(template: Template, expected: &str) {
         let template_string: String = template.into();
         assert!(

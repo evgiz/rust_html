@@ -9,7 +9,7 @@ quote = "1.0"
 proc-macro2 = "1.0.92"
 litrs = "0.4.1"
 scraper = "0.21.0"
-rust_html = { path = ".." }
+rust_html = { path = "..", version="1.1.2" }
 
 
 
