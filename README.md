@@ -64,6 +64,11 @@ The library has only 5 exported functions/types:
 - `Unescaped`: string wrapper for inserting unescaped values
 - `TemplateGroup`: wrapper to insert a `Vec<Template>`
 
+> [!NOTE]  
+> The `Template` struct itself does not implement the `Display` trait.
+> To print or return the HTML value as a `String` you can use `String::from(my_template)`
+> or just `my_template.into()` where applicable.
+
 ### The `rhtml!` macro
 
 The `rhtml!` macro accepts a single string literal as input, typically
@@ -72,13 +77,8 @@ The macro returns a `Template` struct that ensures injection safety when
 reusing template within templates.
 
 Inside the macro string you can inject anything that implements either the
-`std::fmt::Display` or `::Render` trait by using brackets `{}`.
-You can escape brackets by using two of them in a row (`{{` or `}}`).
-
-> [!NOTE]  
-> The `Template` struct itself does not implement the `Display` trait.
-> To print or return the HTML value as a `String` you can use `String::from(my_template)`
-> or just `my_template.into()` where applicable.
+`std::fmt::Display` or `Render` trait by using brackets `{}`.
+You can escape brackets inside the HTML by using two of them in a row (`{{` or `}}`).
 
 ### Example - Reusable Components
 
@@ -153,6 +153,16 @@ fn main() {
     println!("{}", String::from(page));
     // Output is '<div>Bob is an adult</div>'
 }
+```
+
+To prevent ambiguity you must only use `{` and `}` for opening/closing scopes
+in the injected rust code - not inside literals or comments.
+The following is therefore not valid:
+
+```rust
+rhtml! { r#"{ if true { "}" } else { "" } }"# };
+//                       ^
+//                       Bracket not allowed
 ```
 
 ### Structs as reusable components
