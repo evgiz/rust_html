@@ -30,9 +30,23 @@ rust_html_macros = { path = "./rust_html_macros", version = "1.1.2" }
 axum-core = { version = "0.4", optional = true }
 http = { version = "1", optional = true }
 
+[dev-dependencies]
+axum = { version="0.7.9" }
+tokio = { version = "1.41.1", features = ["rt-multi-thread"] }
+rand = "0.8.5"
+
 [workspace]
 members = [
   "rust_html_macros",
-  "rust_html_tests"
+  "rust_html_tests",
 ]
 
+[[example]]
+path = "examples/axum.rs"
+name = "axum"
+required-features = ["axum"]
+
+[[example]]
+path = "examples/axum_calculator.rs"
+name = "axum_calculator"
+required-features = ["axum"]
