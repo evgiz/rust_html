@@ -69,13 +69,10 @@ pub trait Render {
 enum TemplateContent {
     RawString(String),
     WithParameters {
-        template: String,
-        parameters: Vec<Template>,
+        template_parts: Vec<(&'static str, Template)>,
+        template_end: &'static str,
     },
 }
-
-// Internal replace target. Don't use this in your HTML :)
-const REPLACE_TARGET_PREFIX: &str = "__RHTML_REPLACE_TARGET__";
 
 impl Template {
     /// Internal macro creation of a rust_html template.
@@ -83,13 +80,16 @@ impl Template {
     /// DO NOT USE THIS.
     /// USE THE `rhtml!` MACRO.
     ///
-    /// This implementation is very low level, and requires use of the
-    /// internal rust_html templating syntax.
-    pub fn build_internal(template: impl Display, parameters: Vec<Template>) -> Self {
+    /// This implementation is low level and intended
+    /// to be used by the rust_html_macros crate.
+    pub fn build_internal(
+        template_parts: Vec<(&'static str, Template)>,
+        template_end: &'static str,
+    ) -> Self {
         Template {
             content: TemplateContent::WithParameters {
-                template: template.to_string(),
-                parameters: parameters.into_iter().map(|r| r.render()).collect(),
+                template_parts,
+                template_end,
             },
         }
     }
@@ -98,16 +98,19 @@ impl Template {
         match &self.content {
             TemplateContent::RawString(value) => value.to_owned(),
             TemplateContent::WithParameters {
-                template,
-                parameters,
+                template_parts,
+                template_end,
             } => {
-                let mut output = template.clone();
-                for (i, param) in parameters.iter().enumerate() {
-                    let target = format!("{{{}{}}}", REPLACE_TARGET_PREFIX, i);
-                    let replace: String = param.build();
-                    output = output.replace(&target, replace.trim());
+                if template_parts.is_empty() {
+                    return template_end.to_string();
                 }
-                output
+                let mut output: Vec<String> = Vec::with_capacity(template_parts.len() * 2 + 1);
+                for (html_part, param_part) in template_parts.iter() {
+                    output.push(html_part.to_string());
+                    output.push(param_part.build());
+                }
+                output.push(template_end.to_string());
+                output.join("")
             }
         }
     }
@@ -129,18 +132,14 @@ impl Render for Unescaped {
 
 impl Render for TemplateGroup {
     fn render(&self) -> Template {
-        let mut injects = vec![];
-        let mut parameters = vec![];
-        for (i, template) in self.0.iter().enumerate() {
-            injects.push(format!("{{{}{}}}", REPLACE_TARGET_PREFIX, i));
-            parameters.push(template.clone());
-        }
-        let template = injects.join("\n");
+        let string: String = self
+            .0
+            .iter()
+            .map(|template| template.build())
+            .collect::<Vec<_>>()
+            .join("");
         Template {
-            content: TemplateContent::WithParameters {
-                template,
-                parameters,
-            },
+            content: TemplateContent::RawString(string),
         }
     }
 }
@@ -176,5 +175,14 @@ where
 impl From<Template> for String {
     fn from(value: Template) -> Self {
         value.build()
+    }
+}
+
+impl<T> From<T> for Template
+where
+    T: std::fmt::Display,
+{
+    fn from(value: T) -> Self {
+        Render::render(&value)
     }
 }

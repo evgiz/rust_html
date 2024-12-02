@@ -4,8 +4,6 @@ use quote::{format_ident, quote};
 mod util;
 use util::*;
 
-const REPLACE_TARGET_PREFIX: &str = "__RHTML_REPLACE_TARGET__";
-
 /// rust_html - The minimal Rust HTML templating library
 ///
 /// The rhtml macro enables you to easily create composable HTML templates by
@@ -104,59 +102,58 @@ fn expand(input: TokenStream) -> TokenStream {
     };
 
     // Convert contents to html template and list of rust evaluators
-    let (html_string, rust_evaluators) = match parse_rhtml(&input_string) {
+    let (html_parts, rust_evaluators) = match parse_rhtml(&input_string) {
         Ok(result) => result,
         Err(err) => return err,
     };
 
     // Compile time HTML syntax check
-    let html_for_validate = create_template_for_compile_check(&html_string, rust_evaluators.len());
+    let html_for_validate = html_parts.join("");
     if let Err(error) = validate_html(&html_for_validate) {
         return error;
     }
 
     // Build output TokenStream
-    let html_literal = string_to_literal(&html_string);
-    let param_vec_ident = format_ident!("parameters");
-    let param_val_ident: Vec<_> = rust_evaluators
+    let template_parts_ident = format_ident!("template_parts");
+    let mut html_literals: Vec<_> = html_parts
         .iter()
-        .enumerate()
-        .map(|(i, _)| format_ident!("param_{}", i))
+        .map(|part| string_to_literal(part))
         .collect();
+    let Some(template_end_literal) = html_literals.pop() else {
+        return compile_error("internal");
+    };
+
+    if html_literals.len() != rust_evaluators.len() {
+        return compile_error(
+            "unexpected number of parameters, this might be an internal rust_html error",
+        );
+    }
+
     quote! {
         {
-            use rust_html::{Render, Template};
-            let mut #param_vec_ident: Vec<Template> = vec![];
-            #(
-                let #param_val_ident = #rust_evaluators.render();
-                #param_vec_ident.push(#param_val_ident);
-            )*
+            let #template_parts_ident: Vec<(&'static str, rust_html::Template)> = vec![#(
+                (
+                    #html_literals,
+                    rust_html::Render::render(&#rust_evaluators)
+                )
+            ),*];
             rust_html::Template::build_internal(
-                #html_literal,
-                #param_vec_ident,
+                #template_parts_ident,
+                #template_end_literal
             )
         }
     }
 }
 
-/// Replaces all injections with an empty string and
-/// for validating the resulting HTML template string
-fn create_template_for_compile_check(html: &str, n_evaluators: usize) -> String {
-    let mut template: String = html.to_owned();
-    for i in 0..n_evaluators {
-        let target = format!("{{{}{}}}", REPLACE_TARGET_PREFIX, i);
-        template = template.replace(&target, "");
-    }
-    template
-}
-
 /// Parses rhtml content. On success returns HTML string template and list of
 /// rust token streams to inject into the string.
-fn parse_rhtml(input: &str) -> Result<(String, Vec<TokenStream>), TokenStream> {
+fn parse_rhtml(input: &str) -> Result<(Vec<String>, Vec<TokenStream>), TokenStream> {
     let mut skip_next = false;
     let mut depth = 0;
     let mut html_buffer: Vec<char> = vec![];
     let mut rust_buffer: Vec<char> = vec![];
+
+    let mut html_parts: Vec<_> = vec![];
     let mut rust_evaluators: Vec<_> = vec![];
     let chars: Vec<_> = input.chars().collect();
 
@@ -167,56 +164,39 @@ fn parse_rhtml(input: &str) -> Result<(String, Vec<TokenStream>), TokenStream> {
         };
 
         let peek = chars.get(i + 1);
-        let mut exit_rust = false;
+        let rust_mode = depth > 0;
         match token {
             '{' => {
-                depth += 1;
-
                 // Escaping bracket
-                if depth == 1 && peek == Some(&'{') {
+                if !rust_mode && peek == Some(&'{') {
                     html_buffer.push('{');
                     skip_next = true;
-                    depth = 0;
                     continue;
                 }
-
-                // Entered rust code (insert replace target)
-                if depth == 1 && rust_buffer.is_empty() {
-                    html_buffer.push('{');
-                    html_buffer.extend(REPLACE_TARGET_PREFIX.to_string().chars());
-                    html_buffer.extend(rust_evaluators.len().to_string().chars());
-                    html_buffer.push('}');
-                } else {
-                    // Bracket inside rust code
+                depth += 1;
+                if depth > 1 {
                     rust_buffer.push('{');
                 }
             }
             '}' => {
-                depth -= 1;
-
                 // Escaping bracket
-                if depth == -1 && peek == Some(&'}') {
+                if !rust_mode && peek == Some(&'}') {
                     html_buffer.push('}');
                     skip_next = true;
-                    depth = 0;
                     continue;
                 }
-                match depth {
-                    0 => exit_rust = true,
-                    depth => {
-                        if depth > 0 {
-                            rust_buffer.push('}');
-                        } else {
-                            html_buffer.push('{')
-                        }
-                    }
+                depth -= 1;
+                if depth > 0 {
+                    rust_buffer.push('}');
+                }
+                if depth < 0 {
+                    return Err(compile_error(
+                        "Unexpected close bracket '}', need an open bracket first (or '}}' to escape)"
+                    ));
                 }
             }
             token => {
-                if depth == -1 && rust_buffer.is_empty() {
-                    return Err(compile_error("missing open bracket '{' before closing bracket '}' (or to escape, use '}}')"));
-                }
-                if depth > 0 {
+                if rust_mode {
                     rust_buffer.push(*token);
                 } else {
                     html_buffer.push(*token);
@@ -224,8 +204,18 @@ fn parse_rhtml(input: &str) -> Result<(String, Vec<TokenStream>), TokenStream> {
             }
         }
 
+        let change_to_rust = !rust_mode && depth > 0;
+        let change_to_html = rust_mode && depth == 0;
+
+        // When exiting html, push html buffer
+        if change_to_rust {
+            let html_string: String = html_buffer.iter().collect();
+            html_parts.push(html_string);
+            html_buffer.clear();
+        }
+
         // When exiting rust, verify and add to evaluators
-        if exit_rust {
+        if change_to_html {
             let rust_string: String = rust_buffer.iter().collect();
             let rust_evaluator = match inner_rust_to_tokens(&rust_string) {
                 Ok(rust_evaluator) => {
@@ -245,10 +235,12 @@ fn parse_rhtml(input: &str) -> Result<(String, Vec<TokenStream>), TokenStream> {
         }
     }
 
-    if !rust_buffer.is_empty() || depth > 0 {
+    if depth > 0 {
         return Err(compile_error("Missing close bracket '}'"));
     }
 
-    let html_string: String = html_buffer.iter().collect();
-    Ok((html_string, rust_evaluators))
+    let last_part = html_buffer.iter().collect();
+    html_parts.push(last_part);
+
+    Ok((html_parts, rust_evaluators))
 }
