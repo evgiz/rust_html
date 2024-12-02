@@ -46,7 +46,7 @@ standard HTML syntax directly and keep the templates next to your other Rust cod
 
 ## Installation
 
-Inside your project directory, add using cargo:
+Install from [crates.io](https://crates.io/crates/rust_html) using cargo:
 
 ```bash
 cargo add rust_html
