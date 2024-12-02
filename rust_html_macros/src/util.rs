@@ -81,7 +81,9 @@ pub fn wrap_rust_compile_error(
 ) -> TokenStream {
     let mut html_short = false;
     let html_info_max = 20;
-    let html_info = if html_code.len() <= html_info_max {
+    let html_info = if html_code.is_empty() {
+        ""
+    } else if html_code.len() <= html_info_max {
         &html_code[..html_code.len() - 1]
     } else {
         html_short = true;
@@ -90,7 +92,9 @@ pub fn wrap_rust_compile_error(
 
     let mut rust_short = false;
     let rust_info_max = 15;
-    let rust_info = if rust_code.len() <= rust_info_max {
+    let rust_info = if rust_code.is_empty() {
+        ""
+    } else if rust_code.len() <= rust_info_max {
         rust_code
     } else {
         rust_short = true;

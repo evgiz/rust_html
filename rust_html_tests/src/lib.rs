@@ -199,12 +199,22 @@ mod test {
 
     #[test]
     pub fn test_conditional() {
-        test_eq(rhtml! {"{ if true {1} else {2}}"}, "1");
+        test_eq(rhtml! {"{ if true {1} else {2} }"}, "1");
     }
 
     #[test]
     pub fn test_conditional_str() {
         test_eq(rhtml! {r#"{ if true { "hello" } else {"world"}}"#}, "hello");
+    }
+
+    #[test]
+    pub fn test_conditional_template_or_str() {
+        let template = || rhtml! { "hello" };
+        let string = "world".to_string();
+        test_eq(
+            rhtml! {r#"{ if true { template() } else { string.into() } }"#},
+            "hello",
+        );
     }
 
     #[test]
