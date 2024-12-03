@@ -333,6 +333,13 @@ mod test {
         "#};
     }
 
+    #[test]
+    pub fn test_html_table() {
+        test_eq(rhtml! {"<tr></tr>"}, "<tr></tr>");
+        test_eq(rhtml! {"<td>{10}</td>"}, "<td>10</td>");
+        test_eq(rhtml! {"<th>{10}</th>"}, "<th>10</th>");
+    }
+
     fn test_eq(template: Template, expected: &str) {
         let template_string: String = template.into();
         assert!(

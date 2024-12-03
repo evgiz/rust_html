@@ -1,7 +1,13 @@
+use parse::compile_check_html;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+#[macro_use]
+extern crate html5ever;
+
+mod parse;
 mod util;
+
 use util::*;
 
 /// rust_html - The minimal Rust HTML templating library
@@ -13,10 +19,6 @@ use util::*;
 ///
 ///
 /// ## Examples
-///
-/// Note that these imports use the rust_html_macros crate.
-/// In your project you need to use `rust_html` instead,
-/// which depends on this crate.
 ///
 /// Simple example with injected value:
 ///
@@ -77,7 +79,7 @@ use util::*;
 ///
 /// ```rust compile_fail
 /// use rust_html::rhtml;
-/// let class = "my_class";
+/// let class = "red";
 /// let page = rhtml! { "<div class={class}></div>" };
 /// assert_eq!(String::from(page), "<div class=my_class></div>");
 /// ```
@@ -109,7 +111,7 @@ fn expand(input: TokenStream) -> TokenStream {
 
     // Compile time HTML syntax check
     let html_for_validate = html_parts.join("");
-    if let Err(error) = validate_html(&html_for_validate) {
+    if let Err(error) = compile_check_html(&html_for_validate) {
         return error;
     }
 

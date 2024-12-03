@@ -129,31 +129,3 @@ pub fn compile_error(error: &str) -> TokenStream {
     .into_iter()
     .collect()
 }
-
-pub fn validate_html(html: &str) -> Result<(), TokenStream> {
-    let fragment = scraper::Html::parse_fragment(html);
-    if fragment.errors.is_empty() {
-        return Ok(());
-    };
-    if scraper::Html::parse_document(html).errors.is_empty() {
-        return Ok(());
-    };
-
-    // Error hint for root html
-    let mut all_errors = fragment.errors.join(",\n");
-    if fragment.errors.last() == Some(&"</html> with no <body> in scope".into())
-        && html.contains("<html>")
-    {
-        all_errors = format!(
-            "{},\n{}",
-            "<!DOCTYPE html> is required for root html", all_errors
-        );
-    }
-
-    let error = compile_error(&format!(
-        "invalid HTML syntax ({} issues):\n{}",
-        fragment.errors.len(),
-        all_errors
-    ));
-    Err(error)
-}
