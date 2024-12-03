@@ -710,12 +710,14 @@ dependencies = [
 name = "rust_html_macros"
 version = "1.1.2"
 dependencies = [
+ "html5ever",
  "litrs",
  "proc-macro2",
  "quote",
  "rust_html",
  "scraper",
  "syn",
+ "tendril",
 ]
 
 [[package]]
