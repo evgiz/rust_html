@@ -110,7 +110,7 @@ fn expand(input: TokenStream) -> TokenStream {
     };
 
     // Compile time HTML syntax check
-    let html_for_validate = html_parts.join("");
+    let html_for_validate = trim_whitespace_per_line(&html_parts.join(""));
     if let Err(error) = compile_check_html(&html_for_validate) {
         return error;
     }
