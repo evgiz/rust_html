@@ -172,7 +172,6 @@ You can also use structs as components by implementing the `Render` trait.
 ```rust
 use rust_html::{rhtml, Render, Template};
 
-// Components must derive Clone
 #[derive(Clone)]
 struct CardComponent {
     title: String,
