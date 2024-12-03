@@ -1,6 +1,8 @@
+<img src="./banner.jpg" width="100%"/>
+
 # rust_html
 
-The minimal rust html template library
+A HTML templating library for reusable components in web applications
 
 ## About
 
