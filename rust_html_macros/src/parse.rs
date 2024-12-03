@@ -1,6 +1,11 @@
 use proc_macro2::TokenStream;
 
-use html5ever::interface::QualName;
+use html5ever::{
+    interface::{QualName, QuirksMode},
+    tokenizer::TokenizerOpts,
+    tree_builder::TreeBuilderOpts,
+    ParseOpts,
+};
 use scraper::HtmlTreeSink;
 use tendril::TendrilSink;
 
@@ -57,7 +62,18 @@ fn validate_html(html: &str) -> Result<(), Vec<String>> {
 pub fn fragment_inside(context: QualName, fragment: &str) -> Result<(), Vec<String>> {
     let parser = html5ever::driver::parse_fragment(
         HtmlTreeSink::new(scraper::Html::new_fragment()),
-        Default::default(),
+        ParseOpts {
+            tokenizer: TokenizerOpts {
+                exact_errors: true,
+                ..Default::default()
+            },
+            tree_builder: TreeBuilderOpts {
+                exact_errors: true,
+                scripting_enabled: true,
+                quirks_mode: QuirksMode::Quirks,
+                ..Default::default()
+            },
+        },
         context,
         Vec::new(),
     );
@@ -126,11 +142,25 @@ mod test_html_validation {
             <table>
                 <thead>
                     <tr><th>hi</th></tr>
+                    <tr><th>hi</th></tr>
                 </thead>
                 <tbody>
                     <tr><td>hi</td></tr>
+                    <tr><td>hi</td></tr>
                 </tbody>
             </table>
+        "#,
+        );
+    }
+
+    #[test]
+    fn test_table_rows() {
+        valid(
+            r#"
+            <tr>
+                <td>hi world</td>
+                <td>hi world</td>
+            </tr>
         "#,
         );
     }
@@ -198,17 +228,19 @@ mod test_html_validation {
     }
 
     fn valid(html: &str) {
-        let result = validate_html(html);
+        let trimmed = crate::util::trim_whitespace_per_line(html);
+        let result = validate_html(&trimmed);
         assert!(
             result.is_ok(),
             "{} is invalid: {}",
-            html,
+            &trimmed,
             result.unwrap_err().join(", ")
         );
     }
 
     fn invalid(html: &str) {
-        let result = validate_html(html);
+        let trimmed = crate::util::trim_whitespace_per_line(html);
+        let result = validate_html(&trimmed);
         assert!(result.is_err(), "Expected not valid: {}", html);
     }
 }

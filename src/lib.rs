@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 pub use rust_html_macros::rhtml;
 
 pub mod integration;

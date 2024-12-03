@@ -129,3 +129,23 @@ pub fn compile_error(error: &str) -> TokenStream {
     .into_iter()
     .collect()
 }
+
+/// Removes empty lines and whitespace surroinding each line
+/// Necessary for certain quirks of the html5ever parser
+///
+/// E.g <tr> rows must be trimmed this way
+/// since whitespace is parsed as text tokens.
+pub fn trim_whitespace_per_line(html: &str) -> String {
+    html.split('\n')
+        .filter_map(|line| {
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+        .to_string()
+}
